@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Creates an EC2 instance with an Elastic IP and a
+  two security groups. One for SSH and the other
+  for accessing the server via HTTP
+
+Parameters:
+  ServerSecurityGroupDescription:
+    Description: Server Security Group Description
+    Type: String
+  SSHSecurityGroupDescription:
+    Description: SSH Security Group Description
+    Type: String
+  ServerCidr:
+    Description: My server's CIDR
+    Type: String
+  SSHCidr:
+    Description: My Local computer's IP Address
+    Type: String
+  Ec2AmiId:
+    Description: A temp AMI for update
+    Type: String
+
+Mappings:
+  RegionMap:
+    us-east-1: # North Virginia
+      server: ami-009d6802948d06e52
+    us-east-2: # Ohio
+      server: ami-09246ddb00c7c4fef
+    eu-west-2: # London
+      server: ami-0ffd774e02309201f
+    eu-north-1: # Stockholm
+      server: ami-02a6bfdcf8224bd77
+
+Outputs:
+  ElasticIP:
+    Description: Server Public Elastic IP
+    Value: !Ref MyEIP
+    Export:
+      Name: !Sub "${AWS::StackName}--ElasticIP"
+  InstanceID:
+    Description: The Instance ID
+    Value: !Ref MyInstance
+    Export:
+      Name: !Sub "${AWS::StackName}--InstanceID"
+
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1a
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", server]
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref SSHSecurityGroup
+        - !Ref ServerSecurityGroup
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyInstance
+
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref SSHSecurityGroupDescription
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref SSHCidr
+
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref ServerSecurityGroupDescription
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: !Ref ServerCidr

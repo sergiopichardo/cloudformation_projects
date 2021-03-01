@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "ServerSecurityGroupDescription",
+    "ParameterValue": "Allow traffic on port 80"
+  },
+  {
+    "ParameterKey": "SSHSecurityGroupDescription",
+    "ParameterValue": "Enable SSH access via port 22"
+  },
+  {
+    "ParameterKey": "SSHCidr",
+    "ParameterValue": "<YOUR_IP_CIDR>"
+  },
+  {
+    "ParameterKey": "ServerCidr",
+    "ParameterValue": "0.0.0.0/0"
+  },
+  {
+    "ParameterKey": "Ec2AmiId",
+    "ParameterValue": "ami-009d6802948d06e52"
+  }
+]
