@@ -4,23 +4,6 @@ Description: >
   two security groups. One for SSH and the other
   for accessing the server via HTTP
 
-Parameters:
-  ServerSecurityGroupDescription:
-    Description: Server Security Group Description
-    Type: String
-  SSHSecurityGroupDescription:
-    Description: SSH Security Group Description
-    Type: String
-  ServerCidr:
-    Description: My server's CIDR
-    Type: String
-  SSHCidr:
-    Description: My Local computer's IP Address
-    Type: String
-  Ec2AmiId:
-    Description: A temp AMI for update
-    Type: String
-
 Mappings:
   RegionMap:
     us-east-1: # North Virginia
@@ -44,6 +27,25 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}--InstanceID"
 
+Parameters:
+  ServerSecurityGroupDescription:
+    Description: Server Security Group Description
+    Type: String
+  SSHSecurityGroupDescription:
+    Description: SSH Security Group Description
+    Type: String
+  Ec2AmiId:
+    Description: A temp AMI for update
+    Type: String
+  ServerCidr:
+    Description: My server's CIDR
+    Type: String
+  SSHCidr:
+    Description: My Local computer's IP Address
+    Type: AWS::SSM::Parameter::Value<String>
+  EC2KeyPairName:
+    Description: Cryptographic Key to SSH into instance
+    Type: AWS::SSM::Parameter::Value<String>
 
 Resources:
   MyInstance:
@@ -52,6 +54,7 @@ Resources:
       AvailabilityZone: us-east-1a
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", server]
       InstanceType: t2.micro
+      KeyName: !Ref EC2KeyPairName
       SecurityGroups:
         - !Ref SSHSecurityGroup
         - !Ref ServerSecurityGroup
