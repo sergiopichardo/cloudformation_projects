@@ -37,9 +37,6 @@ Parameters:
   Ec2AmiId:
     Description: A temp AMI for for update
     Type: String
-  ServerCidr:
-    Description: Web server's CIDR
-    Type: AWS::SSM::Parameter::Value<String>WebServerCidr
   SSHCidr:
     Description: My Local computer's IP Address
     Type: AWS::SSM::Parameter::Value<String>

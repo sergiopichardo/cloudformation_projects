@@ -16,10 +16,6 @@
     "ParameterValue": "ec2-key-pair"
   },
   {
-    "ParameterKey": "ServerCidr",
-    "ParameterValue": "0.0.0.0/0"
-  },
-  {
     "ParameterKey": "Ec2AmiId",
     "ParameterValue": "ami-009d6802948d06e52"
   }
