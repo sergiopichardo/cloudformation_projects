@@ -35,11 +35,11 @@ Parameters:
     Description: SSH Security Group Description
     Type: String
   Ec2AmiId:
-    Description: A temp AMI for update
+    Description: A temp AMI for for update
     Type: String
   ServerCidr:
-    Description: My server's CIDR
-    Type: String
+    Description: Web server's CIDR
+    Type: AWS::SSM::Parameter::Value<String>WebServerCidr
   SSHCidr:
     Description: My Local computer's IP Address
     Type: AWS::SSM::Parameter::Value<String>
@@ -82,4 +82,4 @@ Resources:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
-        CidrIp: !Ref ServerCidr
+        CidrIp: "{{resolve:ssm:WebServerCidr:1}}"
