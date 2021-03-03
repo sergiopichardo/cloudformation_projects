@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Creates an EC2 instance with an Elastic IP and a
+  two security groups. One for SSH and the other
+  for accessing the server via HTTP
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      server: ami-009d6802948d06e52 # North Virginia
+    us-east-2:
+      server: ami-09246ddb00c7c4fef # Ohio
+    eu-west-2:
+      server: ami-0ffd774e02309201f # London
+    eu-north-1:
+      server: ami-02a6bfdcf8224bd77 # Stockholm
+
+Outputs:
+  ElasticIP:
+    Description: Server Public Elastic IP
+    Value: !Ref MyEIP
+    Export:
+      Name: !Sub "${AWS::StackName}--ElasticIP"
+  InstanceID:
+    Description: The Instance ID
+    Value: !Ref MyInstance
+    Export:
+      Name: !Sub "${AWS::StackName}--InstanceID"
+
+Parameters:
+  ServerSecurityGroupDescription:
+    Description: Server Security Group Description
+    Type: String
+  SSHSecurityGroupDescription:
+    Description: SSH Security Group Description
+    Type: String
+  Ec2AmiId:
+    Description: A temp AMI for for update
+    Type: String
+  SSHCidr:
+    Description: My Local computer's IP Address
+    Type: AWS::SSM::Parameter::Value<String>
+  EC2KeyPairName:
+    Description: Cryptographic Key to SSH into instance
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1a
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", server]
+      InstanceType: t2.micro
+      KeyName: !Ref EC2KeyPairName
+      SecurityGroups:
+        - !Ref SSHSecurityGroup
+        - !Ref ServerSecurityGroup
+      Tags:
+        - Key: "Name"
+          Value: "Apache Web Server"
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "Hello World" > /var/www/html/index.html
+
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyInstance
+
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref SSHSecurityGroupDescription
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref SSHCidr
+
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref ServerSecurityGroupDescription
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: "{{resolve:ssm:WebServerCidr:1}}"
