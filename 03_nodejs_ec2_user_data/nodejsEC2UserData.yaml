@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Creates an EC2 instance with an Elastic IP and a
+  two security groups. One for SSH and the other
+  for accessing the server via HTTP
+
+
+Parameters:
+  ServerSecurityGroupDescription:
+    Description: Server Security Group Description
+    Type: String
+    Default: "Allow traffic on port 80"
+  EC2AmiId:
+    Description: us-east-1 EC2 default AMI
+    Type: String
+  SSHSecurityGroupDescription:
+    Description: SSH Security Group Description
+    Type: String
+    Default: "Enable SSH access via port 22"
+  SSHCidr:
+    Description: My Local computer's IP Address
+    Type: AWS::SSM::Parameter::Value<String>
+  EC2KeyPairName:
+    Description: Cryptographic Key to SSH into instance
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1a
+      ImageId: !Ref EC2AmiId
+      InstanceType: t2.micro
+      KeyName: !Ref EC2KeyPairName
+      SecurityGroups:
+        - !Ref SSHSecurityGroup
+        - !Ref ServerSecurityGroup
+      Tags:
+        - Key: "Name"
+          Value: "NodeJS Web Server"
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "Hello World" > /var/www/html/index.html
+
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyInstance
+
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref SSHSecurityGroupDescription
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref SSHCidr
+
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref ServerSecurityGroupDescription
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: "{{resolve:ssm:WebServerCidr:1}}"

@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "EC2AmiId",
+    "ParameterValue": "ami-009d6802948d06e52"
+  },
+  {
+    "ParameterKey": "SSHCidr",
+    "ParameterValue": "ssh-cidr"
+  },
+  {
+    "ParameterKey": "EC2KeyPairName",
+    "ParameterValue": "ec2-key-pair"
+  }
+]
